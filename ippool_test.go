@@ -56,7 +56,28 @@ func TestRangeAllocate(t *testing.T) {
 		net.IPv4(10, 224, 0, 0),
 		net.IPv4(10, 224, 255, 255),
 	)
-	if err := pool.Allocate(net.IPv4(10, 224, 100, 1)); err != nil {
+	ip := net.IPv4(10, 224, 100, 1)
+	if err := pool.Allocate(ip); err != nil {
 		t.Error(err)
+	}
+	if !pool.IsAllocated(ip) {
+		t.Error()
+	}
+}
+
+func TestRangeDeallocate(t *testing.T) {
+	pool := NewPool(
+		net.IPv4(10, 224, 0, 0),
+		net.IPv4(10, 224, 255, 255),
+	)
+	ip := net.IPv4(10, 224, 100, 1)
+	if err := pool.Allocate(ip); err != nil {
+		t.Error(err)
+	}
+	if err := pool.Deallocate(ip); err != nil {
+		t.Error(err)
+	}
+	if pool.IsAllocated(ip) {
+		t.Error()
 	}
 }

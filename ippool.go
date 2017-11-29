@@ -3,6 +3,7 @@ package ippool
 import (
 	"fmt"
 	"net"
+	"sort"
 )
 
 type Pool struct {
@@ -75,6 +76,9 @@ func NewPool(first, last net.IP) *Pool {
 
 func (p *Pool) Clean() {
 	tmp := make([]Range, 0)
+	sort.Slice(p.Remains, func(i, j int) bool {
+		return compareIP(p.Remains[i].First, p.Remains[j].First) < 0
+	})
 	for _, r := range p.Remains {
 		if r.Count() > 0 {
 			tmp = append(tmp, r)
@@ -83,16 +87,16 @@ func (p *Pool) Clean() {
 	p.Remains = tmp
 }
 
-func (p *Pool) Contain(ip net.IP) bool {
+func (p *Pool) IsAllocated(ip net.IP) bool {
 	if !p.Entire.Contain(ip) {
 		return false
 	}
 	for _, r := range p.Remains {
 		if r.Contain(ip) {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func (p *Pool) Allocate(ip net.IP) error {
@@ -110,7 +114,22 @@ func (p *Pool) Allocate(ip net.IP) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("%s is already used", ip.String())
+	return fmt.Errorf("%s is already allocated", ip.String())
+}
+
+func (p *Pool) Deallocate(ip net.IP) error {
+	if !p.Entire.Contain(ip) {
+		return fmt.Errorf("%s is out of pool range", ip.String())
+	}
+	if !p.IsAllocated(ip) {
+		return fmt.Errorf("%s is not yet allocated", ip.String())
+	}
+	p.Remains = append(p.Remains, Range{
+		First: ip,
+		Last:  ip,
+	})
+	p.Clean()
+	return nil
 }
 
 func (r *Range) Count() int64 {
