@@ -22,7 +22,10 @@ func TestRangeContainTrue(t *testing.T) {
 		First: net.IPv4(1, 2, 0, 0),
 		Last:  net.IPv4(1, 3, 0, 0),
 	}
-	if !r.Contain(net.IPv4(1, 2, 0, 0)) {
+	if !r.Contain(Range{
+		net.IPv4(1, 2, 0, 0),
+		net.IPv4(1, 2, 0, 4),
+	}) {
 		t.Error("Range.Contain() is not true")
 	}
 }
@@ -32,7 +35,10 @@ func TestRangeContainFalse(t *testing.T) {
 		First: net.IPv4(1, 2, 0, 0),
 		Last:  net.IPv4(1, 3, 0, 0),
 	}
-	if r.Contain(net.IPv4(1, 3, 0, 1)) {
+	if r.Contain(Range{
+		net.IPv4(1, 3, 0, 0),
+		net.IPv4(1, 3, 0, 1),
+	}) {
 		t.Error("Range.Contain() is not false")
 	}
 }
@@ -56,7 +62,10 @@ func TestRangeAllocate(t *testing.T) {
 		net.IPv4(10, 224, 0, 0),
 		net.IPv4(10, 224, 255, 255),
 	)
-	ip := net.IPv4(10, 224, 100, 1)
+	ip := Range{
+		net.IPv4(10, 224, 100, 1),
+		net.IPv4(10, 224, 100, 4),
+	}
 	if err := pool.Allocate(ip); err != nil {
 		t.Error(err)
 	}
@@ -70,7 +79,10 @@ func TestRangeDeallocate(t *testing.T) {
 		net.IPv4(10, 224, 0, 0),
 		net.IPv4(10, 224, 255, 255),
 	)
-	ip := net.IPv4(10, 224, 100, 1)
+	ip := Range{
+		net.IPv4(10, 224, 100, 1),
+		net.IPv4(10, 224, 100, 4),
+	}
 	if err := pool.Allocate(ip); err != nil {
 		t.Error(err)
 	}

@@ -87,7 +87,7 @@ func (p *Pool) Clean() {
 	p.Remains = tmp
 }
 
-func (p *Pool) IsAllocated(ip net.IP) bool {
+func (p *Pool) IsAllocated(ip Range) bool {
 	if !p.Entire.Contain(ip) {
 		return false
 	}
@@ -99,17 +99,17 @@ func (p *Pool) IsAllocated(ip net.IP) bool {
 	return true
 }
 
-func (p *Pool) Allocate(ip net.IP) error {
+func (p *Pool) Allocate(ip Range) error {
 	if !p.Entire.Contain(ip) {
 		return fmt.Errorf("%s is out of pool range", ip.String())
 	}
 	for i, r := range p.Remains {
 		if r.Contain(ip) {
 			p.Remains = append(p.Remains, Range{
-				First: nextIP(ip),
+				First: nextIP(ip.Last),
 				Last:  r.Last,
 			})
-			p.Remains[i].Last = prevIP(ip)
+			p.Remains[i].Last = prevIP(ip.First)
 			p.Clean()
 			return nil
 		}
@@ -117,17 +117,14 @@ func (p *Pool) Allocate(ip net.IP) error {
 	return fmt.Errorf("%s is already allocated", ip.String())
 }
 
-func (p *Pool) Deallocate(ip net.IP) error {
+func (p *Pool) Deallocate(ip Range) error {
 	if !p.Entire.Contain(ip) {
 		return fmt.Errorf("%s is out of pool range", ip.String())
 	}
 	if !p.IsAllocated(ip) {
 		return fmt.Errorf("%s is not yet allocated", ip.String())
 	}
-	p.Remains = append(p.Remains, Range{
-		First: ip,
-		Last:  ip,
-	})
+	p.Remains = append(p.Remains, ip)
 	p.Clean()
 	return nil
 }
@@ -140,11 +137,10 @@ func (r *Range) Count() int64 {
 	return count + 1
 }
 
-func (r *Range) Contain(ip net.IP) bool {
-	for i := 0; i < net.IPv6len; i++ {
-		if ip[i] < r.First[i] || r.Last[i] < ip[i] {
-			return false
-		}
-	}
-	return true
+func (r *Range) Contain(ip Range) bool {
+	return compareIP(ip.First, r.First) >= 0 && compareIP(r.Last, ip.Last) >= 0
+}
+
+func (r *Range) String() string {
+	return fmt.Sprintf("%s-%s", r.First.String(), r.Last.String())
 }
