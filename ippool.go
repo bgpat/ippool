@@ -105,7 +105,7 @@ func (p *Pool) Clean() {
 		return compareIP(p.Remains[i].First, p.Remains[j].First) < 0
 	})
 	for _, r := range p.Remains {
-		if r.Count() > 0 {
+		if compareIP(r.First, r.Last) <= 0 {
 			tmp = append(tmp, r)
 		}
 	}
