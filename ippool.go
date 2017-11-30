@@ -92,6 +92,13 @@ func NewPool(first, last net.IP) *Pool {
 	}
 }
 
+func IPv4Range(ip net.IP, size int64) Range {
+	return Range{
+		First: ip,
+		Last:  addIP(ip, int64(1<<uint(32-size))-1),
+	}
+}
+
 func (p *Pool) Clean() {
 	tmp := make([]Range, 0)
 	sort.Slice(p.Remains, func(i, j int) bool {

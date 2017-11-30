@@ -101,3 +101,10 @@ func TestRangeDeallocate(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestIPv4Range(t *testing.T) {
+	r := IPv4Range(net.IPv4(192, 168, 1, 0), 24)
+	if !r.First.Equal(net.IPv4(192, 168, 1, 0)) || !r.Last.Equal(net.IPv4(192, 168, 1, 255)) {
+		t.Error(r)
+	}
+}
