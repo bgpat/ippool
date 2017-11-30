@@ -16,6 +16,24 @@ type Range struct {
 	Last  net.IP
 }
 
+func addIP(ip net.IP, n int64) net.IP {
+	res := make(net.IP, len(ip))
+	copy(res, ip)
+	carry := n
+	for i := len(res) - 1; i > 0; i-- {
+		tmp := int64(res[i]) + carry
+		res[i] = byte(tmp)
+		carry = tmp >> 8
+		if carry == 0 {
+			break
+		}
+	}
+	if carry > 0 {
+		return nil
+	}
+	return res
+}
+
 func prevIP(ip net.IP) net.IP {
 	prev := make(net.IP, len(ip))
 	copy(prev, ip)
@@ -97,6 +115,18 @@ func (p *Pool) IsAllocated(ip Range) bool {
 		}
 	}
 	return true
+}
+
+func (p *Pool) FindFirst(size int64) (Range, bool) {
+	for _, r := range p.Remains {
+		if size < r.Count() {
+			return Range{
+				First: r.First,
+				Last:  addIP(r.First, size-1),
+			}, true
+		}
+	}
+	return Range{}, false
 }
 
 func (p *Pool) Allocate(ip Range) error {

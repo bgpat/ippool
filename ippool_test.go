@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+func TestAddIP(t *testing.T) {
+	ip := net.IPv4(1, 2, 3, 4)
+	newIP := addIP(ip, 300)
+	if !newIP.Equal(net.IPv4(1, 2, 4, 48)) {
+		t.Error(newIP)
+	}
+}
+
 func TestRangeCount(t *testing.T) {
 	r := Range{
 		First: net.IPv4(1, 2, 0, 0),
